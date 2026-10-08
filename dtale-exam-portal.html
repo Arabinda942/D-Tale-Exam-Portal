@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>D'Tale Exam Portal</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#0b0f1a;--card:#121829;--line:#222c47;--tx:#e8ecf6;--mu:#8b97b5;--ac:#f5b942;--ac2:#5b8cff;--ok:#3ecf8e;--bad:#ff6b6b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(900px 500px at 80% -10%,#1a2347 0,transparent 60%),var(--bg);color:var(--tx);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding:16px 22px;border-bottom:1px solid var(--line)}
+.brand{font-weight:800;font-size:20px;letter-spacing:.3px}.brand b{color:var(--ac)}.brand small{display:block;font-weight:500;font-size:11px;color:var(--mu);letter-spacing:1.5px;text-transform:uppercase}
+nav{display:flex;gap:6px;background:var(--card);padding:4px;border-radius:10px;border:1px solid var(--line)}
+nav button{background:none;border:0;color:var(--mu);padding:8px 16px;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
+nav button.on{background:var(--ac);color:#1a1405}
+main{max-width:860px;margin:0 auto;padding:24px 18px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px}
+h2{margin:0 0 6px;font-size:22px}h3{margin:0 0 12px}
+p.mu,.mu{color:var(--mu)}
+label{display:block;font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin:14px 0 6px}
+input,textarea{width:100%;background:#0b1120;color:var(--tx);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font:inherit}
+input:focus,textarea:focus{outline:2px solid var(--ac2);border-color:transparent}
+textarea{min-height:90px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:600px){.row{grid-template-columns:1fr}}
+.btn{background:var(--ac);color:#1a1405;border:0;border-radius:9px;padding:11px 20px;font:inherit;font-weight:700;cursor:pointer;margin-top:18px}
+.btn.alt{background:transparent;color:var(--tx);border:1px solid var(--line)}.btn.red{background:var(--bad);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.hide{display:none!important}
+.bar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#0f1526ee;backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin-bottom:16px;flex-wrap:wrap}
+.timer{font:800 26px ui-monospace,Consolas,monospace;color:var(--ok)}.timer.low{color:var(--bad);animation:p 1s infinite}
+@keyframes p{50%{opacity:.5}}
+.paper{white-space:pre-wrap;font:15px/1.8 Georgia,"Times New Roman",serif;background:#0b1120;border:1px solid var(--line);border-radius:10px;padding:22px;max-height:none;user-select:text}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:30px;text-align:center;cursor:pointer;color:var(--mu)}.drop:hover,.drop.on{border-color:var(--ac);color:var(--tx)}
+.tag{display:inline-block;background:#1b2440;border-radius:20px;padding:3px 11px;font-size:12px;color:var(--mu);margin-right:6px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.wrap{overflow-x:auto}
+.msg{padding:10px 14px;border-radius:9px;margin-top:12px;font-size:14px}.msg.ok{background:#12301f;color:var(--ok)}.msg.err{background:#3a1717;color:var(--bad)}
+.big{font-size:54px;text-align:center}
+</style></head>
+<body>
+<header>
+  <div class="brand"><b>D'Tale</b> Exam Portal<small>Learning Center</small></div>
+  <nav><button id="nS" class="on">Student</button><button id="nT">Teacher</button></nav>
+</header>
+<main>
+
+<!-- STUDENT -->
+<section id="vS">
+  <div id="sNone" class="card hide"><h2>No exam available</h2><p class="mu">No exam has been published yet. Please check back later.</p></div>
+
+  <div id="sForm" class="card hide">
+    <h2 id="eTitle"></h2>
+    <div style="margin:8px 0 14px"><span class="tag" id="eSub" style="color:var(--ac)"></span><span class="tag" id="eNQ"></span><span class="tag" id="eDur"></span><span class="tag" id="eQ"></span></div>
+    <p class="mu" id="eIns" style="white-space:pre-wrap"></p>
+    <div class="row"><div><label>Full Name *</label><input id="fName" placeholder="Your full name"></div>
+    <div><label>Roll / ID *</label><input id="fRoll" placeholder="e.g. DT-2026-014"></div></div>
+    <div class="row"><div><label>Class / Course</label><input id="fCls" placeholder="e.g. B.Tech Sem 5"></div>
+    <div><label>Phone / Email</label><input id="fCon" placeholder="Contact"></div></div>
+    <div id="fErr"></div>
+    <button class="btn" id="bStart">Start Exam →</button>
+    <p class="mu" style="font-size:13px">The timer starts as soon as you press Start. When the exam ends, you must upload a PDF file containing the questions and your answers.</p>
+  </div>
+
+  <div id="sExam" class="hide">
+    <div class="bar"><div><b id="xName"></b><div class="mu" style="font-size:12px" id="xSub"></div></div>
+      <div class="timer" id="xTimer">00:00</div>
+      <button class="btn red" style="margin:0" id="bFinish">Finish Exam</button></div>
+    <div class="card"><h2 id="xTitle"></h2><div class="paper" id="xPaper"></div></div>
+    <p class="mu" style="font-size:13px">Write your answers in a separate document and save it as a PDF (include both the questions and your answers). The upload page appears when time runs out or when you press Finish. Tab switches are counted.</p>
+  </div>
+
+  <div id="sUp" class="card hide">
+    <h2>Exam finished — Upload your answer sheet</h2>
+    <p class="mu">Upload your PDF file containing the questions and your answers.</p>
+    <div class="drop" id="dz">📄 Click to choose or drop your PDF file here<br><b id="dzName"></b></div>
+    <input type="file" id="fDoc" accept=".pdf,application/pdf" class="hide">
+    <div id="uErr"></div>
+    <button class="btn" id="bSub" disabled>Submit Answer Sheet</button>
+  </div>
+
+  <div id="sDone" class="card hide"><div class="big">✅</div><h2 style="text-align:center">Submitted successfully!</h2>
+    <p class="mu" style="text-align:center" id="dMsg"></p>
+    <div style="text-align:center"><button class="btn alt" id="bNew">New student</button></div></div>
+</section>
+
+<!-- TEACHER -->
+<section id="vT" class="hide">
+  <div id="tGate" class="card"><h2>Teacher Login</h2><label>PIN</label><input id="pin" type="password" placeholder="Enter PIN"><div id="pErr"></div><button class="btn" id="bPin">Enter</button></div>
+
+  <div id="tPanel" class="hide">
+    <div class="card"><h2>Create / Update Exam</h2>
+      <div class="row"><div><label>Subject *</label><input id="tSubj" placeholder="e.g. Python Programming"></div>
+      <div><label>Exam Title *</label><input id="tTitle" placeholder="e.g. Unit Test 1"></div></div>
+      <div class="row"><div><label>Duration (minutes) *</label><input id="tDur" type="number" min="1" value="60"></div>
+      <div><label>Total Marks</label><input id="tMarks" placeholder="e.g. 50"></div></div>
+      <label>Instructions</label><textarea id="tIns" placeholder="Rules, marking scheme, etc."></textarea>
+      <label>Exam Paper (.txt) *</label>
+      <div class="drop" id="tdz">📝 Click to choose or drop the .txt exam paper<br><b id="tdzName"></b></div>
+      <input type="file" id="tFile" accept=".txt,text/plain" class="hide">
+      <label>Paper preview / edit</label><textarea id="tText" style="min-height:160px;font-family:Georgia,serif"></textarea>
+      <div id="tMsg"></div>
+      <button class="btn" id="bSave">Publish Exam</button>
+      <button class="btn alt" id="bDelEx">Remove current exam</button>
+    </div>
+    <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0">Submissions <span class="tag" id="sCount">0</span></h3>
+      <div><button class="btn alt" style="margin:0" id="bRef">Refresh</button> <button class="btn alt" style="margin:0" id="bClr">Clear all</button></div></div>
+      <div class="wrap"><table><thead><tr><th>Student</th><th>Roll / Class</th><th>Contact</th><th>Time</th><th>Tab sw.</th><th>File</th></tr></thead><tbody id="sBody"></tbody></table></div>
+      <p class="mu" id="sEmpty">No submissions yet.</p></div>
+  </div>
+</section>
+</main>
+
+<script>
+const TEACHER_PIN='dtale123';
+const $=s=>document.querySelector(s);
+const show=(ids,on)=>ids.forEach(i=>$(i).classList.toggle('hide',!on));
+function get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+function set(k,v){try{v===null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function msg(el,t,c){$(el).innerHTML=t?`<div class="msg ${c}"></div>`:'';if(t)$(el).firstChild.textContent=t}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* IndexedDB for submissions */
+const dbp=()=>new Promise((res,rej)=>{const r=indexedDB.open('dtale_exam',1);r.onupgradeneeded=()=>r.result.createObjectStore('subs',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+async function tx(mode,fn){const d=await dbp();return new Promise((res,rej)=>{const t=d.transaction('subs',mode);const rq=fn(t.objectStore('subs'));t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error)})}
+const addSub=o=>tx('readwrite',s=>s.add(o));
+const allSubs=()=>tx('readonly',s=>s.getAll());
+const clrSubs=()=>tx('readwrite',s=>s.clear());
+
+/* Tabs */
+function tab(t){$('#nS').classList.toggle('on',t=='S');$('#nT').classList.toggle('on',t=='T');show(['#vS'],t=='S');show(['#vT'],t=='T');if(t=='S')renderS();else renderT()}
+$('#nS').onclick=()=>tab('S');$('#nT').onclick=()=>tab('T');
+
+/* ---------- STUDENT ---------- */
+let tick=null;
+function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return(h?h+':':'')+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0')}
+const qCount=t=>(t.match(/^\s*(?:Q(?:uestion)?\.?\s*)?\d+\s*[.):]/gmi)||[]).length;
+function renderS(){
+  clearInterval(tick);
+  show(['#sNone','#sForm','#sExam','#sUp','#sDone'],false);
+  const ex=get('dt_exam'),ss=get('dt_session');
+  if(ss&&ss.phase==='done'){show(['#sDone'],true);$('#dMsg').textContent=`Thank you, ${ss.name}. Your answer sheet has been sent to your teacher.`;return}
+  if(!ex){show(['#sNone'],true);return}
+  if(!ss||ss.examId!==ex.id){
+    $('#eTitle').textContent=ex.title;$('#eSub').textContent='Subject: '+ex.subject;$('#eNQ').textContent=qCount(ex.text)?qCount(ex.text)+' questions':'';$('#eDur').textContent='⏱ '+ex.duration+' min';$('#eQ').textContent=ex.marks?'Marks: '+ex.marks:'';
+    $('#eIns').textContent=ex.instructions||'';show(['#sForm'],true);return}
+  if(ss.phase==='upload'){show(['#sUp'],true);return}
+  // exam running
+  show(['#sExam'],true);
+  $('#xName').textContent=ss.name;$('#xSub').textContent=[ss.roll,ss.cls].filter(Boolean).join(' • ');
+  $('#xTitle').textContent=ex.subject+' — '+ex.title;$('#xPaper').textContent=ex.text;
+  const end=ss.start+ex.duration*60000;
+  const run=()=>{const r=end-Date.now();$('#xTimer').textContent=fmt(r);$('#xTimer').classList.toggle('low',r<5*60000);if(r<=0){clearInterval(tick);finish()}};
+  run();tick=setInterval(run,1000);
+}
+$('#bStart').onclick=()=>{
+  const ex=get('dt_exam'),name=$('#fName').value.trim(),roll=$('#fRoll').value.trim();
+  if(!name||!roll){msg('#fErr','Name and Roll/ID are required.','err');return}
+  set('dt_session',{examId:ex.id,name,roll,cls:$('#fCls').value.trim(),contact:$('#fCon').value.trim(),start:Date.now(),switches:0,phase:'exam'});renderS()};
+function finish(){const ss=get('dt_session');if(!ss||ss.phase!=='exam')return;ss.phase='upload';ss.end=Date.now();set('dt_session',ss);renderS()}
+$('#bFinish').onclick=()=>{if(confirm('Finish the exam? You will not be able to see the paper again.'))finish()};
+document.addEventListener('visibilitychange',()=>{const ss=get('dt_session');if(document.hidden&&ss&&ss.phase==='exam'){ss.switches=(ss.switches||0)+1;set('dt_session',ss)}});
+
+let docFile=null;
+async function pickDoc(f){
+  if(!f)return;msg('#uErr','');
+  if(!/\.pdf$/i.test(f.name)){msg('#uErr','Only PDF files are accepted.','err');return}
+  if(f.size>15*1024*1024){msg('#uErr','File must be under 15 MB.','err');return}
+  const h=new Uint8Array(await f.slice(0,5).arrayBuffer());
+  if(String.fromCharCode(...h)!=='%PDF-'){msg('#uErr','This does not look like a valid PDF file.','err');return}
+  docFile=f;$('#dzName').textContent='✔ '+f.name+' ('+Math.round(f.size/1024)+' KB)';$('#bSub').disabled=false}
+$('#dz').onclick=()=>$('#fDoc').click();$('#fDoc').onchange=e=>pickDoc(e.target.files[0]);
+$('#dz').ondragover=e=>{e.preventDefault();$('#dz').classList.add('on')};$('#dz').ondragleave=()=>$('#dz').classList.remove('on');
+$('#dz').ondrop=e=>{e.preventDefault();$('#dz').classList.remove('on');pickDoc(e.dataTransfer.files[0])};
+$('#bSub').onclick=async()=>{
+  const ss=get('dt_session'),ex=get('dt_exam');if(!docFile||!ss)return;
+  try{
+    await addSub({examId:ex.id,examTitle:ex.title,subject:ex.subject,name:ss.name,roll:ss.roll,cls:ss.cls,contact:ss.contact,start:ss.start,end:ss.end,at:Date.now(),switches:ss.switches||0,fileName:docFile.name,file:docFile});
+    ss.phase='done';set('dt_session',ss);docFile=null;renderS();
+  }catch(e){msg('#uErr','Submit failed: '+(e&&e.message||e),'err')}};
+$('#bNew').onclick=()=>{set('dt_session',null);$('#dzName').textContent='';$('#bSub').disabled=true;renderS()};
+
+/* ---------- TEACHER ---------- */
+let authed=false;
+$('#bPin').onclick=()=>{if($('#pin').value===TEACHER_PIN){authed=true;renderT()}else msg('#pErr','Wrong PIN','err')};
+$('#pin').onkeydown=e=>{if(e.key==='Enter')$('#bPin').click()};
+async function renderT(){
+  show(['#tGate'],!authed);show(['#tPanel'],authed);if(!authed)return;
+  const ex=get('dt_exam');if(ex&&!$('#tTitle').value){$('#tSubj').value=ex.subject||'';$('#tTitle').value=ex.title;$('#tDur').value=ex.duration;$('#tMarks').value=ex.marks||'';$('#tIns').value=ex.instructions||'';$('#tText').value=ex.text}
+  let subs=[];try{subs=await allSubs()}catch(e){}
+  subs.sort((a,b)=>b.at-a.at);
+  $('#sCount').textContent=subs.length;show(['#sEmpty'],!subs.length);
+  $('#sBody').innerHTML=subs.map(s=>`<tr><td><b>${esc(s.name)}</b><div class="mu" style="font-size:12px">${esc(s.subject||'')} — ${esc(s.examTitle)}</div></td><td>${esc(s.roll)}<div class="mu" style="font-size:12px">${esc(s.cls)}</div></td><td>${esc(s.contact)}</td><td>${new Date(s.at).toLocaleString()}</td><td>${s.switches}</td><td><button class="btn alt" style="margin:0;padding:6px 12px" data-id="${s.id}">⬇ ${esc(s.fileName)}</button></td></tr>`).join('');
+  $('#sBody').querySelectorAll('button').forEach(b=>b.onclick=()=>dl(subs.find(x=>x.id==b.dataset.id)));
+}
+async function dl(s){
+  const name=(s.name+'_'+s.roll+'_'+s.fileName).replace(/[^\w.\-]+/g,'_');
+  try{const d=await claude.use('downloads');if(d){await d.save({filename:name,data:s.file});return}}catch(e){if(e&&e.code==='declined')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(s.file);a.download=name;document.body.appendChild(a);a.click();a.remove()}
+function loadTxt(f){if(!f)return;const r=new FileReader();r.onload=()=>{$('#tText').value=r.result;$('#tdzName').textContent='✔ '+f.name;if(!$('#tTitle').value)$('#tTitle').value=f.name.replace(/\.txt$/i,'')};r.readAsText(f)}
+$('#tdz').onclick=()=>$('#tFile').click();$('#tFile').onchange=e=>loadTxt(e.target.files[0]);
+$('#tdz').ondragover=e=>e.preventDefault();$('#tdz').ondrop=e=>{e.preventDefault();loadTxt(e.dataTransfer.files[0])};
+$('#bSave').onclick=()=>{
+  const subject=$('#tSubj').value.trim(),title=$('#tTitle').value.trim(),dur=parseInt($('#tDur').value),text=$('#tText').value.trim();
+  if(!subject||!title||!dur||dur<1||!text){msg('#tMsg','Title, subject, duration and paper text are required.','err');return}
+  set('dt_exam',{id:Date.now(),subject,title,duration:dur,marks:$('#tMarks').value.trim(),instructions:$('#tIns').value.trim(),text});
+  set('dt_session',null);msg('#tMsg','Exam published. Students can now see it on the Student tab.','ok')};
+$('#bDelEx').onclick=()=>{if(confirm('Remove the current exam?')){set('dt_exam',null);set('dt_session',null);['#tSubj','#tTitle','#tMarks','#tIns','#tText'].forEach(i=>$(i).value='');msg('#tMsg','Exam removed.','ok')}};
+$('#bRef').onclick=renderT;
+$('#bClr').onclick=async()=>{if(confirm('This will delete all submissions. Are you sure?')){await clrSubs();renderT()}};
+
+renderS();
+</script>
+</body></html>
