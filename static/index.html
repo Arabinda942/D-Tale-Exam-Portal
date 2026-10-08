@@ -64,7 +64,10 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
     <div class="bar"><div><b id="xName"></b><div class="mu" style="font-size:12px" id="xSub"></div></div>
       <div class="timer" id="xTimer">00:00</div>
       <button class="btn red" style="margin:0" id="bFinish">Finish Exam</button></div>
-    <div class="card"><h2 id="xTitle"></h2><div class="paper" id="xPaper"></div></div>
+    <div class="card"><h2 id="xTitle"></h2>
+      <div id="xPdfBox" class="hide"><iframe id="xPdf" style="width:100%;height:78vh;border:1px solid var(--line);border-radius:10px;background:#fff"></iframe>
+        <p class="mu" style="font-size:13px">PDF not showing on your phone? <a id="xPdfLink" target="_blank" rel="noopener" style="color:var(--ac)">Open the paper in a new tab</a></p></div>
+      <div class="paper" id="xPaper"></div></div>
     <p class="mu" style="font-size:13px">Write your answers in a separate document and save it as a PDF (include both the questions and your answers). The upload page appears when time runs out or when you press Finish. Tab switches are counted.</p>
   </div>
 
@@ -93,10 +96,11 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
       <div class="row"><div><label>Duration (minutes) *</label><input id="tDur" type="number" min="1" value="60"></div>
       <div><label>Total Marks</label><input id="tMarks" placeholder="e.g. 50"></div></div>
       <label>Instructions</label><textarea id="tIns" placeholder="Rules, marking scheme, etc."></textarea>
-      <label>Exam Paper (.txt) *</label>
-      <div class="drop" id="tdz">📝 Click to choose or drop the .txt exam paper<br><b id="tdzName"></b></div>
-      <input type="file" id="tFile" accept=".txt,text/plain" class="hide">
-      <label>Paper preview / edit</label><textarea id="tText" style="min-height:160px;font-family:Georgia,serif"></textarea>
+      <label>Exam Paper (.txt or .pdf) *</label>
+      <div class="drop" id="tdz">📝 Click to choose or drop the exam paper (.txt or .pdf)<br><b id="tdzName"></b></div>
+      <input type="file" id="tFile" accept=".txt,text/plain,.pdf,application/pdf" class="hide">
+      <label>Paper text (optional when a PDF is uploaded)</label><textarea id="tText" style="min-height:160px;font-family:Georgia,serif"></textarea>
+      <div id="tPdfInfo"></div>
       <div id="tMsg"></div>
       <button class="btn" id="bSave">Publish Exam</button>
       <button class="btn alt" id="bDelEx">Remove current exam</button>
@@ -127,7 +131,7 @@ const saveTok=t=>{tok=t;try{t?localStorage.setItem('dt_token',t):localStorage.re
 function fmt(ms){const s=Math.max(0,Math.ceil(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;return(h?h+':':'')+String(m).padStart(2,'0')+':'+String(x).padStart(2,'0')}
 
 async function renderS(){
-  clearInterval(tick);inExam=false;
+  clearInterval(tick);inExam=false;$('#xPdf').removeAttribute('src');
   show(['#sNone','#sForm','#sExam','#sUp','#sDone'],false);
   if(tok){
     try{
@@ -147,7 +151,9 @@ async function renderS(){
 function runExam(a){
   show(['#sExam'],true);inExam=true;
   $('#xName').textContent=a.name;$('#xSub').textContent=[a.roll,a.cls].filter(Boolean).join(' • ');
-  $('#xTitle').textContent=a.subject+' — '+a.title;$('#xPaper').textContent=a.text;
+  $('#xTitle').textContent=a.subject+' — '+a.title;$('#xPaper').textContent=a.text||'';$('#xPaper').classList.toggle('hide',!a.text);
+  show(['#xPdfBox'],!!a.has_pdf);
+  if(a.has_pdf){const u='/api/attempt/'+encodeURIComponent(tok)+'/paper.pdf';if($('#xPdf').getAttribute('src')===null)$('#xPdf').src=u+'#toolbar=0&navpanes=0';$('#xPdfLink').href=u}
   const end=Date.now()+a.remaining*1000;
   const run=()=>{const r=end-Date.now();$('#xTimer').textContent=fmt(r);$('#xTimer').classList.toggle('low',r<5*60000);if(r<=0){clearInterval(tick);finish()}};
   run();tick=setInterval(run,1000);
@@ -187,18 +193,26 @@ $('#pin').onkeydown=e=>{if(e.key==='Enter')$('#bPin').click()};
 async function renderT(){
   if(!authed){try{await api('/api/teacher/me');authed=true}catch(e){}}
   show(['#tGate'],!authed);show(['#tPanel'],authed);if(!authed)return;
-  if(!filled){try{const e=(await api('/api/teacher/exam')).exam;if(e){$('#tSubj').value=e.subject;$('#tTitle').value=e.title;$('#tDur').value=e.duration;$('#tMarks').value=e.marks||'';$('#tIns').value=e.instructions||'';$('#tText').value=e.text}filled=true}catch(e){}}
+  if(!filled){try{const e=(await api('/api/teacher/exam')).exam;if(e){$('#tSubj').value=e.subject;$('#tTitle').value=e.title;$('#tDur').value=e.duration;$('#tMarks').value=e.marks||'';$('#tIns').value=e.instructions||'';$('#tText').value=e.text;if(e.has_pdf){pdfState={file:null,keep:true,name:e.pdf_name};pdfInfo()}}filled=true}catch(e){}}
   let subs=[];try{subs=(await api('/api/teacher/subs')).subs}catch(e){authed=false;return renderT()}
   $('#sCount').textContent=subs.length;show(['#sEmpty'],!subs.length);
   $('#sBody').innerHTML=subs.map(s=>`<tr><td><b>${esc(s.name)}</b><div class="mu" style="font-size:12px">${esc(s.subject)} — ${esc(s.examTitle)}</div></td><td>${esc(s.roll)}<div class="mu" style="font-size:12px">${esc(s.cls)}</div></td><td>${esc(s.contact)}</td><td>${new Date(s.at).toLocaleString()}</td><td>${s.switches}</td><td><a class="btn alt" style="margin:0;padding:6px 12px;display:inline-block;text-decoration:none" href="/api/teacher/subs/${s.id}/file">⬇ PDF</a></td></tr>`).join('');
 }
-function loadTxt(f){if(!f)return;const r=new FileReader();r.onload=()=>{$('#tText').value=r.result;$('#tdzName').textContent='✔ '+f.name;if(!$('#tTitle').value)$('#tTitle').value=f.name.replace(/\.txt$/i,'')};r.readAsText(f)}
-$('#tdz').onclick=()=>$('#tFile').click();$('#tFile').onchange=e=>loadTxt(e.target.files[0]);
-$('#tdz').ondragover=e=>e.preventDefault();$('#tdz').ondrop=e=>{e.preventDefault();loadTxt(e.dataTransfer.files[0])};
+let pdfState={file:null,keep:false,name:''};
+function pdfInfo(){const el=$('#tPdfInfo');if(!(pdfState.file||pdfState.keep)){el.innerHTML='';return}
+  el.innerHTML='<div class="msg ok"></div>';const m=el.firstChild;m.textContent='PDF paper: '+(pdfState.file?pdfState.file.name:pdfState.name)+' ';
+  const b=document.createElement('button');b.className='btn alt';b.style.cssText='margin:0 0 0 10px;padding:3px 10px';b.textContent='Remove';b.onclick=()=>{pdfState={file:null,keep:false,name:''};pdfInfo()};m.appendChild(b)}
+function loadPaper(f){if(!f)return;
+  if(/\.pdf$/i.test(f.name)){pdfState={file:f,keep:false,name:f.name};$('#tdzName').textContent='✔ '+f.name;if(!$('#tTitle').value)$('#tTitle').value=f.name.replace(/\.pdf$/i,'');pdfInfo();return}
+  const r=new FileReader();r.onload=()=>{$('#tText').value=r.result;$('#tdzName').textContent='✔ '+f.name;if(!$('#tTitle').value)$('#tTitle').value=f.name.replace(/\.txt$/i,'')};r.readAsText(f)}
+$('#tdz').onclick=()=>$('#tFile').click();$('#tFile').onchange=e=>loadPaper(e.target.files[0]);
+$('#tdz').ondragover=e=>e.preventDefault();$('#tdz').ondrop=e=>{e.preventDefault();loadPaper(e.dataTransfer.files[0])};
 $('#bSave').onclick=async()=>{
-  try{await api('/api/teacher/exam',send('POST',{subject:$('#tSubj').value,title:$('#tTitle').value,duration:$('#tDur').value,marks:$('#tMarks').value,instructions:$('#tIns').value,text:$('#tText').value}));
-  msg('#tMsg','Exam published. Students can now see it on the Student tab.','ok')}catch(e){msg('#tMsg',e.message,'err')}};
-$('#bDelEx').onclick=async()=>{if(confirm('Remove the current exam?')){try{await api('/api/teacher/exam',{method:'DELETE'});['#tSubj','#tTitle','#tMarks','#tIns','#tText'].forEach(i=>$(i).value='');msg('#tMsg','Exam removed.','ok')}catch(e){msg('#tMsg',e.message,'err')}}};
+  const fd=new FormData();
+  [['subject','#tSubj'],['title','#tTitle'],['duration','#tDur'],['marks','#tMarks'],['instructions','#tIns'],['text','#tText']].forEach(([k,i])=>fd.append(k,$(i).value));
+  if(pdfState.file)fd.append('paper',pdfState.file);else if(pdfState.keep)fd.append('keep_pdf','1');
+  try{await api('/api/teacher/exam',{method:'POST',body:fd});if(pdfState.file){pdfState={file:null,keep:true,name:pdfState.file.name}}pdfInfo();msg('#tMsg','Exam published. Students can now see it on the Student tab.','ok')}catch(e){msg('#tMsg',e.message,'err')}};
+$('#bDelEx').onclick=async()=>{if(confirm('Remove the current exam?')){try{await api('/api/teacher/exam',{method:'DELETE'});['#tSubj','#tTitle','#tMarks','#tIns','#tText'].forEach(i=>$(i).value='');pdfState={file:null,keep:false,name:''};pdfInfo();msg('#tMsg','Exam removed.','ok')}catch(e){msg('#tMsg',e.message,'err')}}};
 $('#bRef').onclick=renderT;
 $('#bClr').onclick=async()=>{if(confirm('This will delete all submissions. Are you sure?')){try{await api('/api/teacher/subs',{method:'DELETE'});renderT()}catch(e){}}};
 renderS();
